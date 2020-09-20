@@ -1,2 +1,6 @@
 
-void ThisIsAFunction();
+extern "C" {
+    namespace Wrapper{
+        void StandardFunction();
+    }
+}
