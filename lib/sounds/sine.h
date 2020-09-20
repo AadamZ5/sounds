@@ -1,11 +1,16 @@
+#pragma once
+
+#include "sound.h"
 
 namespace DynamicSounds{
 
-    class SineWave{
+    class SineWave : public DynamicSounds::SoundSource {
         public:
-            SineWave(double freq, int sample_rate);
+            SineWave(double freq, unsigned int sample_rate);
 
-            void GenerateFrames(double *, int);
+            void GenerateFrames(double *, int);     //Virtual overrides
+            unsigned int GetSampleRate();           //
+            void SetSampleRate(unsigned int);       //
             void SetAmplitude(double);
             double GetAmplitude();
             void SetFrequency(double);
@@ -14,11 +19,10 @@ namespace DynamicSounds{
             double GetPhaseShift();
 
         private:
-            int sample_rate;
             double amp;
             double freq;
             double phase_shift;
-            double *last_angle;
+            double last_angle;
     };
 
 };

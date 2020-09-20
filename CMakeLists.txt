@@ -13,7 +13,7 @@ message(STATUS "===== Welcome to Sounds =====")
 add_executable(sounds main.cpp)
 
 #Create targets for our source-made libraries
-add_subdirectory("lib/sound-maker") #sutil
+add_subdirectory("lib/sounds") #sutil
 add_subdirectory("lib/effects") #fxutil
 add_subdirectory("lib/audio") #audutil
 #find_library(sutils sutil "sounds-util/sounds")
