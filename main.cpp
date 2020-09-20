@@ -22,6 +22,8 @@ int main (int argc, char *argv[])
         sleep(1);
     }
 
+    ad->Stop();
+
     exit(0);
 }
 
