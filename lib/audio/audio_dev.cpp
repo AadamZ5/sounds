@@ -68,7 +68,7 @@ bool DynamicSounds::AudioDevice::initialize(){
 
 	printf("seconds: %d\n", seconds);
     
-    snd_pcm_hw_params_free(this->pcm_params);
+    //snd_pcm_hw_params_free(this->pcm_params);
 
     /* Software params */
     snd_pcm_sw_params_malloc(&this->sw_params);
@@ -79,7 +79,7 @@ bool DynamicSounds::AudioDevice::initialize(){
 
     snd_pcm_sw_params(this->pcm_handle, this->sw_params);
 
-    snd_pcm_sw_params_free(this->sw_params);
+    //snd_pcm_sw_params_free(this->sw_params);
 
     /* Prepare to write! */
     snd_pcm_prepare(this->pcm_handle);
@@ -93,10 +93,9 @@ bool DynamicSounds::AudioDevice::initialize(){
         _tmp[i] = 0;
     }
     
-
     snd_pcm_writei(pcm_handle, _tmp, 2 * period_size);
 
-    snd_async_add_pcm_handler(&this->pcm_callback, this->pcm_handle, audio_cb, NULL);
+    //snd_async_add_pcm_handler(&this->pcm_callback, this->pcm_handle, audio_cb, NULL);
     //TODO: FINISH
 }
 

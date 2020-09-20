@@ -2,6 +2,7 @@
 #include <alsa/asoundlib.h>
 #include "lib/effects/effect.h"
 #include "lib/sound-maker/sgen.h"
+#include "lib/audio/audio_dev.h"
 
 using namespace std;
 
@@ -13,18 +14,13 @@ int main (int argc, char *argv[])
 
     DynamicSounds::SineWave *sw = new DynamicSounds::SineWave(440, 44100);
 
-    double buffer[44100];
+    double buffer[1024];
 
     //GenFrames!
-    sw->GenerateFrames(buffer, 44100);
+    sw->GenerateFrames(buffer, 1024);
 
-    for (size_t i = 0; i < 44100; i++)
-    {
-        cout << "[" << i << "] " << buffer[i] << endl;
-    }
-
-    
-    
+    DynamicSounds::AudioDevice *ad = new DynamicSounds::AudioDevice("default", 44100, 1024);
+    ad->initialize();
     exit(0);
 }
 
