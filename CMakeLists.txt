@@ -9,13 +9,16 @@ project(Sounds VERSION 1.0.0 LANGUAGES CXX CUDA)
 #Welcome message for fun
 message(STATUS "===== Welcome to Sounds =====")
 
-#The executable files: `add_executable(OUT_NAME SOURCE_FILE)`
-add_executable(sounds main.cu)
-
-
+#Find the external libraries we need to link
 find_library(asound asound alsa/asoundlib)
-
 set(libs ${asound})
 
+#Create targets for our source-made libraries
+add_library(test_lib SHARED "sounds-util/sounds/sounds.cu")
+
+#The executable files: `add_executable(OUT_NAME SOURCE_FILE)`
+add_executable(sounds main.cpp)
+
 message("Linking " ${libs})
-target_link_libraries(sounds ${libs})
+target_link_libraries(sounds ${libs} ${test_lib})
+
