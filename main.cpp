@@ -5,8 +5,6 @@
 
 using namespace std;
 
-long int buf[1024];
-
 int main (int argc, char *argv[])
 {
     std::cout << "Hello World!" << std::endl;
@@ -15,12 +13,12 @@ int main (int argc, char *argv[])
 
     DynamicSounds::SineWave *sw = new DynamicSounds::SineWave(440, 44100);
 
-    double buffer[1024];
+    double buffer[44100];
 
     //GenFrames!
-    sw->GenerateFrames(buffer, 1024);
+    sw->GenerateFrames(buffer, 44100);
 
-    for (size_t i = 0; i < 1024; i++)
+    for (size_t i = 0; i < 44100; i++)
     {
         cout << "[" << i << "] " << buffer[i] << endl;
     }
