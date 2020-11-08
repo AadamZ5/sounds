@@ -25,8 +25,6 @@ DynamicSounds::AudioDevice::AudioDevice(string dev_name, unsigned int sample_rat
 };
 
 void DynamicSounds::AudioDevice::alsa_callback_director(snd_async_handler_t *handler){
-    
-    std::cout << "Static handler!" << std::endl;
 
     AudioDevice *device = (DynamicSounds::AudioDevice*)snd_async_handler_get_callback_private(handler);
 
@@ -53,8 +51,17 @@ void DynamicSounds::AudioDevice::audio_cb(snd_async_handler_t *handler){
     snd_pcm_sframes_t avail;
     int err;
 
-    avail = snd_pcm_avail_update(this->pcm_handle);
+    double _tmpArray[this->logical_buff_size];
+    this->sound_source->GenerateFrames(_tmpArray, this->logical_buff_size);
 
+    this->buffer = new unsigned short[this->logical_buff_size]();
+
+    for (size_t i = 0; i < this->logical_buff_size; i++)
+    {
+        this->buffer[i] = (short)( ( (1 + _tmpArray[i]) * 65535 ) /2 ); //maximum for unsigned short (16-bit)
+    }
+
+    avail = snd_pcm_avail_update(this->pcm_handle);
     while (avail >= period_size) {
         snd_pcm_writei(pcm_handle, this->buffer, period_size);
         avail = snd_pcm_avail_update(this->pcm_handle);
@@ -63,35 +70,47 @@ void DynamicSounds::AudioDevice::audio_cb(snd_async_handler_t *handler){
 
 bool DynamicSounds::AudioDevice::Initialize(){
 
-    unsigned short channels = 1;
+    unsigned short channels = 2;
 
     //I am ashamed, this is all very copy paste. I do not fully understand ALSA right now, so this is an OK start to get noise to play.
 
     unsigned int pcm, tmp, dir;
 
-    if (pcm = snd_pcm_open(&this->pcm_handle, this->dev_name.c_str(),SND_PCM_STREAM_PLAYBACK, 0) < 0) 
-		printf("ERROR: Can't open \"%s\" PCM device. %s\n", this->dev_name.c_str(), snd_strerror(pcm));
+    if (pcm = snd_pcm_open(&this->pcm_handle, this->dev_name.c_str(),SND_PCM_STREAM_PLAYBACK, 0) < 0){
+        printf("ERROR: Can't open \"%s\" PCM device. %s\n", this->dev_name.c_str(), snd_strerror(pcm)); 
+        return false;
+    }
 
     /* Allocate parameters object and fill it with default values*/
-	snd_pcm_hw_params_alloca(&this->pcm_params);
-
+	snd_pcm_hw_params_alloca(&this->pcm_params); //Allocate memory for the parameter structure
     snd_pcm_hw_params_any(this->pcm_handle, this->pcm_params);
 
     /* Set parameters */
-	if (pcm = snd_pcm_hw_params_set_access(pcm_handle, this->pcm_params, SND_PCM_ACCESS_RW_INTERLEAVED) < 0) 
-        std::printf("ERROR: Can't set interleaved mode. %s\n", snd_strerror(pcm));
+	if (pcm = snd_pcm_hw_params_set_access(pcm_handle, this->pcm_params, SND_PCM_ACCESS_RW_INTERLEAVED) < 0) {
+        std::printf("ERROR: Can't set interleaved mode. %s\n", snd_strerror(pcm)); 
+        return false;
+    }
 
-    if (pcm = snd_pcm_hw_params_set_format(pcm_handle, this->pcm_params, SND_PCM_FORMAT_S16_LE) < 0) 
-        std::printf("ERROR: Can't set format. %s\n", snd_strerror(pcm));
+    if (pcm = snd_pcm_hw_params_set_format(pcm_handle, this->pcm_params, SND_PCM_FORMAT_S16_LE) < 0) {
+        std::printf("ERROR: Can't set format. %s\n", snd_strerror(pcm)); 
+        return false;
+    }
+        
 
-	if (pcm = snd_pcm_hw_params_set_channels(pcm_handle, this->pcm_params, channels) < 0) 
-		std::printf("ERROR: Can't set channels number. %s\n", snd_strerror(pcm));
+	if (pcm = snd_pcm_hw_params_set_channels(pcm_handle, this->pcm_params, channels) < 0) {
+        std::printf("ERROR: Can't set channels number. %s\n", snd_strerror(pcm)); 
+        return false;
+    }
+		
 
     
     unsigned int last_sample_rate = this->sample_rate;
     //Watch out! this function can change your supplied sample rate to something different if the device needs to!
-	if (pcm = snd_pcm_hw_params_set_rate_near(pcm_handle, this->pcm_params, &this->sample_rate, 0) < 0) 
-		std::printf("ERROR: Can't set rate. %s\n", snd_strerror(pcm));
+	if (pcm = snd_pcm_hw_params_set_rate_near(pcm_handle, this->pcm_params, &this->sample_rate, 0) < 0) {
+        std::printf("ERROR: Can't set rate. %s\n", snd_strerror(pcm)); 
+        return false;
+    }
+		
     if(this->sample_rate != last_sample_rate){
         std::printf("Sample rate changed to %d\n", this->sample_rate);
         this->sound_source->SetSampleRate(this->sample_rate);
@@ -152,8 +171,11 @@ bool DynamicSounds::AudioDevice::Initialize(){
     */
 
     /* Write parameters */
-	if (pcm = snd_pcm_hw_params(this->pcm_handle, this->pcm_params) < 0)
-		std::printf("ERROR: Can't set harware parameters. %s\n", snd_strerror(pcm));
+	if (pcm = snd_pcm_hw_params(this->pcm_handle, this->pcm_params) < 0){
+        std::printf("ERROR: Can't set harware parameters. %s\n", snd_strerror(pcm)); 
+        return false;
+    }
+		
 
     /* Resume information */
 	printf("PCM name: '%s'\n", snd_pcm_name(this->pcm_handle));
@@ -175,8 +197,8 @@ bool DynamicSounds::AudioDevice::Initialize(){
     //snd_pcm_hw_params_free(this->pcm_params); //This does bad stuff right now...?
 
     /* Software params */
-    snd_pcm_sw_params_malloc(&this->sw_params);
-    snd_pcm_sw_params_current (this->pcm_handle, this->sw_params);
+    snd_pcm_sw_params_malloc(&this->sw_params); //Allocate memory for the parameter structure
+    snd_pcm_sw_params_current(this->pcm_handle, this->sw_params); //Get the current software parameters
 
     snd_pcm_sw_params_set_start_threshold(this->pcm_handle, this->sw_params, this->buff_size - period_size); //buff_size - period_size seems to be a good threshold for generating more data.
     snd_pcm_sw_params_set_avail_min(this->pcm_handle, this->sw_params, period_size);
@@ -192,7 +214,6 @@ bool DynamicSounds::AudioDevice::Initialize(){
     this->logical_buff_size = buff_size/sizeof(short);
 
     /* Write an initial stream of data... */
-    
     double _tmpArray[this->logical_buff_size];
     this->sound_source->GenerateFrames(_tmpArray, this->logical_buff_size);
 
@@ -205,9 +226,16 @@ bool DynamicSounds::AudioDevice::Initialize(){
     }
     
 
-    snd_pcm_writei(pcm_handle, this->buffer, 2 * period_size);
+    snd_pcm_writei(this->pcm_handle, this->buffer, 2 * period_size);
 
-    snd_async_add_pcm_handler(&this->pcm_callback, this->pcm_handle, AudioDevice::alsa_callback_director, this);
-    //TODO: FINISH
+    //TODO: No no callback! Callback bad! It onlhy work with very loaw level devisays!
+    int cb_return;
+    if(cb_return = snd_async_add_pcm_handler(&this->pcm_callback, this->pcm_handle, AudioDevice::alsa_callback_director, this) < 0){
+        std::printf("ERROR: Can't set callback, %s\n", snd_strerror(cb_return));
+        return false;
+    }
+
+    return true;
+    
 }
 

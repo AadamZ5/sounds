@@ -9,8 +9,8 @@ namespace DynamicSounds{
     class AudioDevice{
         
         public:
-            AudioDevice(string dev_name, unsigned int sample_rate, unsigned int buff_size, unsigned int period_size);
-            AudioDevice(string dev_name, unsigned int sample_rate, unsigned int buff_size, unsigned int period_size, DynamicSounds::SoundSource *sound_source);
+            AudioDevice(string dev_name, unsigned int desired_sample_rate, unsigned int buff_size, unsigned int period_size);
+            AudioDevice(string dev_name, unsigned int desired_sample_rate, unsigned int buff_size, unsigned int period_size, DynamicSounds::SoundSource *sound_source);
             ~AudioDevice();
 
             void SetSoundSource(DynamicSounds::SoundSource *source);

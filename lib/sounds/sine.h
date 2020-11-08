@@ -8,9 +8,9 @@ namespace DynamicSounds{
         public:
             SineWave(double freq, unsigned int sample_rate);
 
-            void GenerateFrames(double *, int);     //Virtual overrides
-            unsigned int GetSampleRate();           //
-            void SetSampleRate(unsigned int);       //
+            void GenerateFrames(double *, int);     // <- Virtual overrides
+            unsigned int GetSampleRate();           // <-
+            void SetSampleRate(unsigned int);       // <-
             void SetAmplitude(double);
             double GetAmplitude();
             void SetFrequency(double);

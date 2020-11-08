@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.10)
 project(Sounds VERSION 1.0.0 LANGUAGES CUDA CXX)
 
 #Welcome message for fun
-message(STATUS "===== Welcome to Sounds =====")
+message(STATUS "===== Welcome to Sounds? =====")
 
 #The executable files: `add_executable(OUT_NAME SOURCE_FILE)`
 add_executable(sounds main.cpp)

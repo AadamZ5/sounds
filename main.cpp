@@ -12,18 +12,20 @@ int main (int argc, char *argv[])
 
     DynamicSounds::SineWave *sw = new DynamicSounds::SineWave(440, 44100);
 
-    DynamicSounds::AudioDevice *ad = new DynamicSounds::AudioDevice("pulse", 44100, 4096, 512, sw);
-    ad->Initialize();
+    DynamicSounds::AudioDevice *ad = new DynamicSounds::AudioDevice(argv[1], 44100, 4096, 512, sw);
+    
+    if(ad->Initialize()){
+        ad->Start();
 
-    ad->Start();
+        for (size_t i = 0; i < 100; i++)
+        {
+            sleep(1);
+        }
 
-    for (size_t i = 0; i < 3; i++)
-    {
-        sleep(1);
+        ad->Stop();
+    }else{
+        std::printf("Error while initializing audio device.\n");
     }
-
-    ad->Stop();
-
     exit(0);
 }
 
