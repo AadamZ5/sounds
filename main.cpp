@@ -8,7 +8,7 @@ int main (int argc, char *argv[])
 {
     std::cout << "Hello World!" << std::endl;
 
-    DynamicSounds::Wrapper::StandardFunction();
+    DynamicSounds::StandardFunction();
 
     DynamicSounds::SineWave *sw = new DynamicSounds::SineWave(440, 44100);
 

@@ -49,22 +49,15 @@ void DynamicSounds::AudioDevice::audio_cb(snd_async_handler_t *handler){
     std::cout << "Audio is calling back" << std::endl;
 
     snd_pcm_sframes_t avail;
-    int err;
 
-    double _tmpArray[this->logical_buff_size];
-    this->sound_source->GenerateFrames(_tmpArray, this->logical_buff_size);
-
-    this->buffer = new unsigned short[this->logical_buff_size]();
-
-    for (size_t i = 0; i < this->logical_buff_size; i++)
-    {
-        this->buffer[i] = (short)( ( (1 + _tmpArray[i]) * 65535 ) /2 ); //maximum for unsigned short (16-bit)
-    }
+    this->sound_source->GenerateFrames(this->buffer, this->logical_buff_size);
 
     avail = snd_pcm_avail_update(this->pcm_handle);
     while (avail >= period_size) {
+        std::cout << "Available bytes left: " << avail << std::endl;
         snd_pcm_writei(pcm_handle, this->buffer, period_size);
         avail = snd_pcm_avail_update(this->pcm_handle);
+        
     }
 };
 
@@ -82,8 +75,8 @@ bool DynamicSounds::AudioDevice::Initialize(){
     }
 
     /* Allocate parameters object and fill it with default values*/
-	snd_pcm_hw_params_alloca(&this->pcm_params); //Allocate memory for the parameter structure
-    snd_pcm_hw_params_any(this->pcm_handle, this->pcm_params);
+	snd_pcm_hw_params_alloca(&this->pcm_params); //Allocate memory for the hardware parameter structure
+    snd_pcm_hw_params_any(this->pcm_handle, this->pcm_params); //Sends default parameters, populates our structure.
 
     /* Set parameters */
 	if (pcm = snd_pcm_hw_params_set_access(pcm_handle, this->pcm_params, SND_PCM_ACCESS_RW_INTERLEAVED) < 0) {
@@ -122,6 +115,7 @@ bool DynamicSounds::AudioDevice::Initialize(){
     //Watch out! this function can change your supplied period size to something different if the device needs to!
     //Additionally, period size is really only conceptually applicable in non-interleaved signals, but this still should be processed in a general case.
     snd_pcm_hw_params_set_period_size_near(this->pcm_handle, this->pcm_params, &this->period_size, NULL);
+    std::printf("Period size: %lu \n", this->period_size);
 
     /*
         Periods!
@@ -215,20 +209,11 @@ bool DynamicSounds::AudioDevice::Initialize(){
 
     /* Write an initial stream of data... */
     double _tmpArray[this->logical_buff_size];
-    this->sound_source->GenerateFrames(_tmpArray, this->logical_buff_size);
-
     this->buffer = new unsigned short[this->logical_buff_size]();
-
-    for (size_t i = 0; i < this->logical_buff_size; i++)
-    {
-        this->buffer[i] = (short)( ( (1 + _tmpArray[i]) * 65535 ) /2 ); //maximum for unsigned short (16-bit)
-        
-    }
+    this->sound_source->GenerateFrames(this->buffer, this->logical_buff_size);
     
-
     snd_pcm_writei(this->pcm_handle, this->buffer, 2 * period_size);
 
-    //TODO: No no callback! Callback bad! It onlhy work with very loaw level devisays!
     int cb_return;
     if(cb_return = snd_async_add_pcm_handler(&this->pcm_callback, this->pcm_handle, AudioDevice::alsa_callback_director, this) < 0){
         std::printf("ERROR: Can't set callback, %s\n", snd_strerror(cb_return));

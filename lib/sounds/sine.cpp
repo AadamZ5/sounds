@@ -1,6 +1,7 @@
 #include "sine.h"
 #include <limits>
 #include <math.h>
+#include <iostream>
 
 DynamicSounds::SineWave::SineWave(double freq, unsigned int sample_rate) : DynamicSounds::SoundSource(sample_rate) {
     this->freq = freq;
@@ -42,9 +43,9 @@ unsigned int DynamicSounds::SineWave::GetSampleRate(){
     return this->sample_rate;
 }
 
-void DynamicSounds::SineWave::GenerateFrames(double buffer[], int buffer_size){
+void DynamicSounds::SineWave::GenerateFrames(uint16_t buffer[], int buffer_size){
 
-    double m_time;
+    double m_time = this->last_time;
     double time_step = 1.0/this->sample_rate;
 
     double angle;
@@ -55,12 +56,13 @@ void DynamicSounds::SineWave::GenerateFrames(double buffer[], int buffer_size){
             m_time = 0.0;
         }
 
-        angle = (2 * M_PI * this->freq * m_time + this->phase_shift + this->last_angle);
-        double value = sin(angle);
+        angle = (2 * M_PI * this->freq * m_time + this->phase_shift);
+        double value = sin(angle) * std::numeric_limits<uint16_t>::max();
         buffer[sample] = value;
 
         m_time += time_step;
     }
 
     this->last_angle = angle;
+    this->last_time = m_time;
 }
